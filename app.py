@@ -48,6 +48,15 @@ st.set_page_config(
 st.markdown(
     f"""
     <style>
+    /* Hide Streamlit Deploy Button */
+    [data-testid="stDeployButton"],
+    [data-testid="stAppDeployButton"],
+    .stDeployButton,
+    .stAppDeployButton {
+        display: none !important;
+        visibility: hidden !important;
+    }
+
     /* Main Background & Typography */
     .stApp {{
         background-color: {THEME["bg"]};
