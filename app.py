@@ -1,6 +1,6 @@
 """
 Retain-IQ: Customer Churn Prediction & Retention Intelligence System.
-Main Streamlit Application.
+Main Streamlit Application with Modern Dark Navy & Charcoal Theme.
 """
 
 import os
@@ -21,6 +21,21 @@ from src.explainability import ChurnExplainer
 from src.retention_engine import RetentionEngine
 from src.simulator import WhatIfSimulator, RevenueAtRiskAnalyzer
 
+# Proposed Design Palette
+THEME = {
+    "bg": "#0B1120",        # Deep navy / charcoal
+    "sidebar": "#111827",   # Dark charcoal sidebar
+    "card": "#1E293B",      # Consistent dark slate card
+    "border": "#334155",    # Subtle card border
+    "primary": "#3B82F6",   # Vibrant Blue
+    "secondary": "#8B5CF6", # Purple Accent
+    "success": "#10B981",   # Emerald Green
+    "warning": "#F59E0B",   # Amber Gold
+    "churn": "#EF4444",     # Vibrant Red (Churn Risk)
+    "text": "#E2E8F0",      # Crisp light text
+    "text_muted": "#94A3B8",# Muted text
+}
+
 # Streamlit Page Config
 st.set_page_config(
     page_title="Retain-IQ | Churn Intelligence System",
@@ -29,75 +44,191 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# Custom Styling
+# Custom Styling (Dark Navy / Charcoal Theme)
 st.markdown(
-    """
+    f"""
     <style>
-    .main-title {
-        font-size: 2.2rem;
+    /* Main Background & Typography */
+    .stApp {{
+        background-color: {THEME["bg"]};
+        color: {THEME["text"]};
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }}
+    
+    /* Headings */
+    h1, h2, h3, h4, h5, h6 {{
+        color: #FFFFFF !important;
         font-weight: 700;
-        color: #1E293B;
+        letter-spacing: -0.3px;
+    }}
+    .main-title {{
+        font-size: 2.25rem;
+        font-weight: 800;
+        color: #FFFFFF;
         margin-bottom: 0.2rem;
-    }
-    .sub-title {
-        font-size: 1.05rem;
-        color: #64748B;
+        letter-spacing: -0.5px;
+    }}
+    .sub-title {{
+        font-size: 1.02rem;
+        color: {THEME["text_muted"]};
         margin-bottom: 1.5rem;
-    }
-    .metric-card {
-        background: #F8FAFC;
-        border: 1px solid #E2E8F0;
-        border-radius: 10px;
-        padding: 16px;
+        line-height: 1.5;
+    }}
+
+    /* Sidebar Custom Styling */
+    [data-testid="stSidebar"] {{
+        background-color: {THEME["sidebar"]} !important;
+        border-right: 1px solid {THEME["card"]};
+    }}
+    [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {{
+        color: {THEME["text"]};
+    }}
+
+    /* Navigation Radio Items */
+    [data-testid="stSidebar"] .stRadio > div {{
+        gap: 6px;
+    }}
+    [data-testid="stSidebar"] .stRadio label {{
+        background: {THEME["card"]};
+        border: 1px solid {THEME["border"]};
+        border-radius: 8px;
+        padding: 8px 12px;
+        color: {THEME["text"]};
+        cursor: pointer;
+        transition: all 0.15s ease-in-out;
+    }}
+    [data-testid="stSidebar"] .stRadio label:hover {{
+        background: #273549;
+        border-color: {THEME["primary"]};
+        color: #FFFFFF;
+    }}
+
+    /* Consistent Dark KPI Cards */
+    .metric-card {{
+        background: {THEME["card"]};
+        border: 1px solid {THEME["border"]};
+        border-radius: 12px;
+        padding: 16px 12px;
         text-align: center;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    }
-    .metric-val {
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.25);
+        transition: transform 0.15s ease, border-color 0.15s ease;
+    }}
+    .metric-card:hover {{
+        border-color: #475569;
+        transform: translateY(-2px);
+    }}
+    .metric-val {{
         font-size: 1.8rem;
-        font-weight: 700;
-        color: #0F172A;
-    }
-    .metric-lbl {
-        font-size: 0.85rem;
-        color: #64748B;
+        font-weight: 800;
+        color: #FFFFFF;
+        margin: 4px 0;
+    }}
+    .metric-lbl {{
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: {THEME["text_muted"]};
         text-transform: uppercase;
+        letter-spacing: 0.8px;
+    }}
+
+    /* Status Badges */
+    .risk-high {{
+        background-color: rgba(239, 68, 68, 0.18);
+        color: #F87171;
+        border: 1px solid rgba(239, 68, 68, 0.45);
+        padding: 5px 14px;
+        border-radius: 20px;
+        font-weight: 700;
+        font-size: 0.82rem;
         letter-spacing: 0.5px;
-    }
-    .risk-high {
-        background-color: #FEE2E2;
-        color: #991B1B;
-        padding: 4px 12px;
+    }}
+    .risk-med {{
+        background-color: rgba(245, 158, 11, 0.18);
+        color: #FBBF24;
+        border: 1px solid rgba(245, 158, 11, 0.45);
+        padding: 5px 14px;
         border-radius: 20px;
-        font-weight: 600;
-        font-size: 0.85rem;
-    }
-    .risk-med {
-        background-color: #FEF3C7;
-        color: #92400E;
-        padding: 4px 12px;
+        font-weight: 700;
+        font-size: 0.82rem;
+        letter-spacing: 0.5px;
+    }}
+    .risk-low {{
+        background-color: rgba(16, 185, 129, 0.18);
+        color: #34D399;
+        border: 1px solid rgba(16, 185, 129, 0.45);
+        padding: 5px 14px;
         border-radius: 20px;
+        font-weight: 700;
+        font-size: 0.82rem;
+        letter-spacing: 0.5px;
+    }}
+
+    /* Dark Info Box */
+    .info-box-dark {{
+        background: {THEME["card"]};
+        border: 1px solid {THEME["border"]};
+        border-radius: 10px;
+        padding: 14px 18px;
+        color: {THEME["text"]};
+        margin-bottom: 16px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    }}
+
+    /* Tabs Styling */
+    .stTabs [data-baseweb="tab-list"] {{
+        gap: 8px;
+        background-color: {THEME["sidebar"]};
+        padding: 6px;
+        border-radius: 10px;
+        border: 1px solid {THEME["card"]};
+    }}
+    .stTabs [data-baseweb="tab"] {{
+        padding: 8px 18px;
+        border-radius: 8px;
+        color: {THEME["text_muted"]};
         font-weight: 600;
-        font-size: 0.85rem;
-    }
-    .risk-low {
-        background-color: #DCFCE7;
-        color: #166534;
-        padding: 4px 12px;
-        border-radius: 20px;
+        font-size: 0.9rem;
+    }}
+    .stTabs [aria-selected="true"] {{
+        background-color: {THEME["card"]} !important;
+        color: #FFFFFF !important;
+        border: 1px solid {THEME["border"]};
+    }}
+
+    /* Modern Buttons */
+    .stButton > button {{
+        background-color: {THEME["primary"]};
+        color: #FFFFFF;
         font-weight: 600;
-        font-size: 0.85rem;
-    }
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 12px;
-    }
-    .stTabs [data-baseweb="tab"] {
-        padding: 8px 16px;
-        border-radius: 6px;
-    }
+        border-radius: 8px;
+        border: none;
+        padding: 8px 18px;
+        transition: background-color 0.15s ease;
+    }}
+    .stButton > button:hover {{
+        background-color: #2563EB;
+        color: #FFFFFF;
+    }}
     </style>
     """,
     unsafe_allow_html=True,
 )
+
+
+def style_plot(fig, height=360, title=None):
+    """Apply consistent custom dark Plotly styling."""
+    fig.update_layout(
+        template="plotly_dark",
+        paper_bgcolor=THEME["card"],
+        plot_bgcolor=THEME["card"],
+        font=dict(color=THEME["text"], family="Inter, sans-serif"),
+        title=dict(font=dict(color="#FFFFFF", size=14)) if title else None,
+        height=height,
+        margin=dict(l=20, r=20, t=35 if title else 20, b=20),
+        xaxis=dict(gridcolor="#273549", zerolinecolor=THEME["border"]),
+        yaxis=dict(gridcolor="#273549", zerolinecolor=THEME["border"]),
+    )
+    return fig
 
 
 def render_table(df: pd.DataFrame):
@@ -197,22 +328,22 @@ if menu_option == "🔮 1. Churn Prediction":
     c1, c2, c3, c4, c5 = st.columns(5)
     with c1:
         st.markdown(
-            f'<div class="metric-card"><div class="metric-val">{metrics.get("accuracy", 0.755)*100:.1f}%</div><div class="metric-lbl">Accuracy</div></div>',
+            f'<div class="metric-card"><div class="metric-val" style="color:{THEME["primary"]};">{metrics.get("accuracy", 0.755)*100:.1f}%</div><div class="metric-lbl">Accuracy</div></div>',
             unsafe_allow_html=True,
         )
     with c2:
         st.markdown(
-            f'<div class="metric-card"><div class="metric-val">{metrics.get("roc_auc", 0.846)*100:.1f}%</div><div class="metric-lbl">ROC-AUC</div></div>',
+            f'<div class="metric-card"><div class="metric-val" style="color:{THEME["secondary"]};">{metrics.get("roc_auc", 0.846)*100:.1f}%</div><div class="metric-lbl">ROC-AUC</div></div>',
             unsafe_allow_html=True,
         )
     with c3:
         st.markdown(
-            f'<div class="metric-card"><div class="metric-val">{metrics.get("recall", 0.791)*100:.1f}%</div><div class="metric-lbl">Recall (Churn)</div></div>',
+            f'<div class="metric-card"><div class="metric-val" style="color:{THEME["success"]};">{metrics.get("recall", 0.791)*100:.1f}%</div><div class="metric-lbl">Recall (Churn)</div></div>',
             unsafe_allow_html=True,
         )
     with c4:
         st.markdown(
-            f'<div class="metric-card"><div class="metric-val">{metrics.get("precision", 0.526)*100:.1f}%</div><div class="metric-lbl">Precision</div></div>',
+            f'<div class="metric-card"><div class="metric-val" style="color:{THEME["warning"]};">{metrics.get("precision", 0.526)*100:.1f}%</div><div class="metric-lbl">Precision</div></div>',
             unsafe_allow_html=True,
         )
     with c5:
@@ -243,11 +374,11 @@ if menu_option == "🔮 1. Churn Prediction":
                         [f"FN: {cm_dict['fn']}", f"TP: {cm_dict['tp']}"],
                     ],
                     texttemplate="%{text}",
-                    colorscale="Blues",
+                    colorscale=[[0, "#1E293B"], [1, THEME["primary"]]],
                     showscale=False,
                 )
             )
-            fig_cm.update_layout(height=350, margin=dict(l=20, r=20, t=20, b=20))
+            style_plot(fig_cm, height=350)
             st.plotly_chart(fig_cm, use_container_width=True)
             st.caption(
                 "High recall (79.1%) ensures the business minimizes False Negatives (FN) to capture churning subscribers early."
@@ -264,10 +395,11 @@ if menu_option == "🔮 1. Churn Prediction":
                 text="percentage",
                 labels={"importance": "Importance Score", "feature": "Feature"},
                 color="importance",
-                color_continuous_scale="Teal",
+                color_continuous_scale=[[0, "#1E293B"], [1, THEME["primary"]]],
             )
             fig_fi.update_traces(texttemplate="%{text:.1f}%", textposition="outside")
-            fig_fi.update_layout(height=350, showlegend=False, margin=dict(l=20, r=20, t=20, b=20))
+            fig_fi.update_layout(showlegend=False)
+            style_plot(fig_fi, height=350)
             st.plotly_chart(fig_fi, use_container_width=True)
 
     with tab_predict:
@@ -286,10 +418,17 @@ if menu_option == "🔮 1. Churn Prediction":
                 )
                 selected_row = raw_df[raw_df["customerID"] == selected_id].iloc[0]
                 customer_input = selected_row.to_dict()
-                st.info(
-                    f"Selected Customer **{selected_id}** | Actual Churn: **{customer_input.get('Churn')}** | "
-                    f"Tenure: {customer_input.get('tenure')}m | Monthly: ${customer_input.get('MonthlyCharges')} | "
-                    f"Contract: {customer_input.get('Contract')}"
+                st.markdown(
+                    f"""
+                    <div class="info-box-dark">
+                        <span style="color:{THEME['text_muted']};">Selected Customer:</span> <b style="color:#FFFFFF;">{selected_id}</b> | 
+                        <span style="color:{THEME['text_muted']};">Actual Churn:</span> <b style="color:{THEME['warning']};">{customer_input.get('Churn')}</b> | 
+                        <span style="color:{THEME['text_muted']};">Tenure:</span> <b style="color:#FFFFFF;">{customer_input.get('tenure')}m</b> | 
+                        <span style="color:{THEME['text_muted']};">Monthly:</span> <b style="color:#FFFFFF;">${customer_input.get('MonthlyCharges')}</b> | 
+                        <span style="color:{THEME['text_muted']};">Contract:</span> <b style="color:#FFFFFF;">{customer_input.get('Contract')}</b>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
                 )
         else:
             with col_sel:
@@ -338,25 +477,31 @@ if menu_option == "🔮 1. Churn Prediction":
                 go.Indicator(
                     mode="gauge+number",
                     value=prob * 100,
-                    number={"suffix": "%", "valueformat": ".1f"},
-                    title={"text": "Churn Probability"},
+                    number={"suffix": "%", "valueformat": ".1f", "font": {"color": "#FFFFFF", "size": 36}},
+                    title={"text": "Churn Probability", "font": {"color": THEME["text"], "size": 15}},
                     gauge={
-                        "axis": {"range": [0, 100]},
+                        "axis": {"range": [0, 100], "tickcolor": THEME["text_muted"]},
                         "bar": {"color": pred["risk_color"]},
                         "steps": [
-                            {"range": [0, 30], "color": "#E8F5E9"},
-                            {"range": [30, 60], "color": "#FFF9C4"},
-                            {"range": [60, 100], "color": "#FFEBEE"},
+                            {"range": [0, 30], "color": "#064E3B"},
+                            {"range": [30, 60], "color": "#78350F"},
+                            {"range": [60, 100], "color": "#7F1D1D"},
                         ],
                         "threshold": {
-                            "line": {"color": "black", "width": 3},
+                            "line": {"color": "#FFFFFF", "width": 3},
                             "thickness": 0.75,
                             "value": 50,
                         },
                     },
                 )
             )
-            fig_gauge.update_layout(height=280, margin=dict(l=20, r=20, t=30, b=20))
+            fig_gauge.update_layout(
+                template="plotly_dark",
+                paper_bgcolor=THEME["card"],
+                plot_bgcolor=THEME["card"],
+                height=280,
+                margin=dict(l=20, r=20, t=30, b=20),
+            )
             st.plotly_chart(fig_gauge, use_container_width=True)
 
         with res_col2:
@@ -396,13 +541,13 @@ elif menu_option == "👥 2. Customer Segmentation":
             st.markdown(
                 f"""
                 <div class="metric-card">
-                    <div style="font-weight:700; color:#1E293B; font-size:1.1rem; margin-bottom:4px;">{r['Segment_Name']}</div>
-                    <div style="font-size:0.85rem; color:#64748B;">Cluster {int(r['Cluster'])} • {r['Percentage']:.1f}% share</div>
-                    <div class="metric-val" style="margin-top:8px; font-size:1.4rem;">{r['Count']:,}</div>
-                    <div style="font-size:0.85rem; margin-top:6px;">
-                        Avg Tenure: <b>{r['Avg_Tenure']:.0f}m</b><br>
-                        Monthly: <b>${r['Avg_MonthlyCharges']:.1f}</b><br>
-                        Churn Rate: <b>{r['Churn_Rate']*100:.1f}%</b>
+                    <div style="font-weight:700; color:#FFFFFF; font-size:1.05rem; margin-bottom:4px;">{r['Segment_Name']}</div>
+                    <div style="font-size:0.82rem; color:{THEME['text_muted']};">Cluster {int(r['Cluster'])} • {r['Percentage']:.1f}% share</div>
+                    <div class="metric-val" style="margin-top:8px; font-size:1.45rem; color:{THEME['primary']};">{r['Count']:,}</div>
+                    <div style="font-size:0.85rem; margin-top:6px; color:{THEME['text']}; line-height:1.6;">
+                        Avg Tenure: <b style="color:#FFFFFF;">{r['Avg_Tenure']:.0f}m</b><br>
+                        Monthly: <b style="color:#FFFFFF;">${r['Avg_MonthlyCharges']:.1f}</b><br>
+                        Churn Rate: <b style="color:{THEME['churn'] if r['Churn_Rate'] > 0.3 else THEME['success']};">{r['Churn_Rate']*100:.1f}%</b>
                     </div>
                 </div>
                 """,
@@ -424,10 +569,10 @@ elif menu_option == "👥 2. Customer Segmentation":
             size="TotalCharges",
             hover_data=["customerID", "Contract", "Churn"],
             labels={"tenure": "Tenure (Months)", "MonthlyCharges": "Monthly Charges ($)"},
-            color_discrete_sequence=px.colors.qualitative.Bold,
-            opacity=0.7,
+            color_discrete_sequence=[THEME["primary"], THEME["secondary"], THEME["warning"], THEME["success"]],
+            opacity=0.75,
         )
-        fig_scatter.update_layout(height=420, margin=dict(l=20, r=20, t=20, b=20))
+        style_plot(fig_scatter, height=420)
         st.plotly_chart(fig_scatter, use_container_width=True)
 
     with col_chart2:
@@ -436,10 +581,10 @@ elif menu_option == "👥 2. Customer Segmentation":
             summary_df,
             values="Count",
             names="Segment_Name",
-            hole=0.45,
-            color_discrete_sequence=px.colors.qualitative.Bold,
+            hole=0.48,
+            color_discrete_sequence=[THEME["primary"], THEME["secondary"], THEME["warning"], THEME["success"]],
         )
-        fig_donut.update_layout(height=420, margin=dict(l=20, r=20, t=20, b=20))
+        style_plot(fig_donut, height=420)
         st.plotly_chart(fig_donut, use_container_width=True)
 
     # Detailed Characteristics Table
@@ -493,12 +638,13 @@ elif menu_option == "🔍 3. Explainability Engine":
             y="feature",
             orientation="h",
             color="mean_abs_shap",
-            color_continuous_scale="Purples",
+            color_continuous_scale=[[0, "#1E293B"], [1, THEME["secondary"]]],
             labels={"mean_abs_shap": "Mean |SHAP Value|", "feature": "Feature"},
             text="percentage",
         )
         fig_gshap.update_traces(texttemplate="%{text:.1f}% impact", textposition="outside")
-        fig_gshap.update_layout(height=450, showlegend=False, margin=dict(l=20, r=20, t=20, b=20))
+        fig_gshap.update_layout(showlegend=False)
+        style_plot(fig_gshap, height=450)
         st.plotly_chart(fig_gshap, use_container_width=True)
 
         st.caption(
@@ -518,9 +664,16 @@ elif menu_option == "🔍 3. Explainability Engine":
             encoded_sample = processor.transform_single_customer(sample_data)
             pred_res = predictor.predict_single_customer(sample_data, processor)
 
-            st.markdown(f"**Customer**: `{cust_id}`")
-            st.markdown(f"**Predicted Churn Probability**: `{pred_res['churn_probability']*100:.1f}%`")
-            st.markdown(f"**Risk Level**: `{pred_res['risk_category']}`")
+            st.markdown(
+                f"""
+                <div class="info-box-dark">
+                    <span style="color:{THEME['text_muted']};">Customer ID:</span> <b style="color:#FFFFFF;">{cust_id}</b><br>
+                    <span style="color:{THEME['text_muted']};">Predicted Probability:</span> <b style="color:{pred_res['risk_color']};">{pred_res['churn_probability']*100:.1f}%</b><br>
+                    <span style="color:{THEME['text_muted']};">Assigned Risk:</span> <b style="color:#FFFFFF;">{pred_res['risk_category']}</b>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
         with col_c2:
             exp_res = explainer.explain_customer(encoded_sample, top_n=5)
@@ -529,7 +682,7 @@ elif menu_option == "🔍 3. Explainability Engine":
             factors_df = pd.DataFrame(factors).sort_values("shap_value", ascending=True)
 
             factors_df["color"] = factors_df["shap_value"].apply(
-                lambda x: "#EF4444" if x > 0 else "#10B981"
+                lambda x: THEME["churn"] if x > 0 else THEME["success"]
             )
             factors_df["feature_label"] = factors_df["feature"].apply(explainer._format_feature_name)
 
@@ -543,12 +696,7 @@ elif menu_option == "🔍 3. Explainability Engine":
                     textposition="outside",
                 )
             )
-            fig_waterfall.update_layout(
-                title="Top Contributors to Churn Risk (Red: Increases Risk | Green: Decreases Risk)",
-                xaxis_title="SHAP Value (Impact on Prediction Log-Odds)",
-                height=350,
-                margin=dict(l=20, r=20, t=40, b=20),
-            )
+            style_plot(fig_waterfall, height=350, title="Top Contributors to Churn Risk (Red: Risk Driver | Green: Retention Anchor)")
             st.plotly_chart(fig_waterfall, use_container_width=True)
 
         st.markdown("### 💬 Plain Language Explanation")
@@ -579,11 +727,16 @@ elif menu_option == "💡 4. Retention Engine":
     with col_info:
         st.markdown(
             f"""
-            <div style="background:#F1F5F9; border-radius:8px; padding:12px 18px; margin-bottom:12px;">
-                <b>Customer Profile:</b> {target_id} | <b>Tenure:</b> {target_cust['tenure']} months | 
-                <b>Monthly Bill:</b> ${target_cust['MonthlyCharges']} | <b>Contract:</b> {target_cust['Contract']} | 
-                <b>Internet:</b> {target_cust['InternetService']} | <b>Payment:</b> {target_cust['PaymentMethod']}<br>
-                <b>Churn Risk:</b> <span style="font-weight:700; color:{pred_res['risk_color']}">{pred_res['churn_probability']*100:.1f}% ({pred_res['risk_category']})</span>
+            <div class="info-box-dark">
+                <span style="color:{THEME['text_muted']};">Customer Profile:</span> <b style="color:#FFFFFF;">{target_id}</b> | 
+                <span style="color:{THEME['text_muted']};">Tenure:</span> <b style="color:#FFFFFF;">{target_cust['tenure']}m</b> | 
+                <span style="color:{THEME['text_muted']};">Monthly Bill:</span> <b style="color:#FFFFFF;">${target_cust['MonthlyCharges']}</b> | 
+                <span style="color:{THEME['text_muted']};">Contract:</span> <b style="color:#FFFFFF;">{target_cust['Contract']}</b> | 
+                <span style="color:{THEME['text_muted']};">Internet:</span> <b style="color:#FFFFFF;">{target_cust['InternetService']}</b> | 
+                <span style="color:{THEME['text_muted']};">Payment:</span> <b style="color:#FFFFFF;">{target_cust['PaymentMethod']}</b><br>
+                <div style="margin-top:6px;">
+                    <span style="color:{THEME['text_muted']};">Churn Risk Level:</span> <span style="font-weight:700; color:{pred_res['risk_color']}">{pred_res['churn_probability']*100:.1f}% ({pred_res['risk_category']})</span>
+                </div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -594,9 +747,9 @@ elif menu_option == "💡 4. Retention Engine":
 
     st.markdown(
         f"""
-        <div style="background:{rec_package['urgency_color']}15; border-left: 5px solid {rec_package['urgency_color']}; padding: 12px 16px; border-radius: 6px; margin-bottom: 20px;">
-            <div style="font-weight:700; color:{rec_package['urgency_color']}; font-size:1rem;">{rec_package['urgency']}</div>
-            <div style="color:#1E293B; margin-top:2px;">{rec_package['headline']}</div>
+        <div style="background:{rec_package['urgency_color']}20; border-left: 5px solid {rec_package['urgency_color']}; padding: 14px 18px; border-radius: 8px; margin-bottom: 22px;">
+            <div style="font-weight:700; color:{rec_package['urgency_color']}; font-size:1.02rem; letter-spacing:0.5px;">{rec_package['urgency']}</div>
+            <div style="color:#E2E8F0; margin-top:4px; font-size:0.95rem;">{rec_package['headline']}</div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -608,15 +761,15 @@ elif menu_option == "💡 4. Retention Engine":
         with st.container():
             st.markdown(
                 f"""
-                <div style="background:white; border:1px solid #E2E8F0; border-radius:8px; padding:16px; margin-bottom:12px; box-shadow:0 1px 2px rgba(0,0,0,0.03);">
+                <div style="background:{THEME['card']}; border:1px solid {THEME['border']}; border-radius:10px; padding:18px; margin-bottom:14px; box-shadow:0 4px 6px -1px rgba(0,0,0,0.2);">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span style="background:#EEF2FF; color:#4F46E5; padding:3px 10px; border-radius:12px; font-size:0.75rem; font-weight:600; text-transform:uppercase;">{rec['category']}</span>
-                        <span style="font-size:0.8rem; color:#64748B;">Cost: <b>{rec['financial_cost']}</b></span>
+                        <span style="background:rgba(59,130,246,0.15); color:#60A5FA; border:1px solid rgba(59,130,246,0.3); padding:4px 12px; border-radius:14px; font-size:0.75rem; font-weight:700; text-transform:uppercase;">{rec['category']}</span>
+                        <span style="font-size:0.82rem; color:{THEME['text_muted']};">Cost: <b style="color:#FFFFFF;">{rec['financial_cost']}</b></span>
                     </div>
-                    <div style="font-size:1.1rem; font-weight:700; color:#0F172A; margin-top:8px;">{rec['title']}</div>
-                    <div style="color:#334155; font-size:0.92rem; margin-top:6px;"><b>Strategy:</b> {rec['action']}</div>
-                    <div style="color:#059669; font-size:0.85rem; font-weight:600; margin-top:6px;">✔ Expected Impact: {rec['expected_impact']}</div>
-                    <div style="color:#64748B; font-size:0.8rem; margin-top:4px;"><i>Reason: {rec['reason']}</i></div>
+                    <div style="font-size:1.15rem; font-weight:700; color:#FFFFFF; margin-top:10px;">{rec['title']}</div>
+                    <div style="color:#CBD5E1; font-size:0.95rem; margin-top:6px; line-height:1.5;"><b style="color:#FFFFFF;">Strategy:</b> {rec['action']}</div>
+                    <div style="color:#34D399; font-size:0.88rem; font-weight:600; margin-top:8px;">✔ Expected Impact: {rec['expected_impact']}</div>
+                    <div style="color:{THEME['text_muted']}; font-size:0.82rem; margin-top:4px;"><i>Reason: {rec['reason']}</i></div>
                 </div>
                 """,
                 unsafe_allow_html=True,
@@ -679,24 +832,24 @@ elif menu_option == "⚡ 5. What-If Simulator & Revenue at Risk":
 
         m1, m2, m3 = st.columns(3)
         with m1:
-            st.metric(
-                label="Baseline Churn Risk",
-                value=f"{sim_result['original_probability']*100:.1f}%",
-                help="Prediction using original customer attributes",
+            st.markdown(
+                f'<div class="metric-card"><div class="metric-val">{sim_result["original_probability"]*100:.1f}%</div><div class="metric-lbl">Baseline Churn Risk</div></div>',
+                unsafe_allow_html=True,
             )
         with m2:
-            st.metric(
-                label="Simulated Churn Risk",
-                value=f"{sim_result['modified_probability']*100:.1f}%",
-                delta=f"{sim_result['probability_difference']*100:+.1f}%",
-                delta_color="inverse",
+            delta_val = sim_result["probability_difference"] * 100
+            delta_color = THEME["success"] if delta_val < 0 else THEME["churn"]
+            st.markdown(
+                f'<div class="metric-card"><div class="metric-val" style="color:{delta_color};">{sim_result["modified_probability"]*100:.1f}% <span style="font-size:1rem;">({delta_val:+.1f}%)</span></div><div class="metric-lbl">Simulated Churn Risk</div></div>',
+                unsafe_allow_html=True,
             )
         with m3:
-            st.metric(
-                label="Risk Category Shift",
-                value=sim_result["modified_risk_category"],
-                delta="Improved" if sim_result["risk_reduced"] else "Worsened",
+            st.markdown(
+                f'<div class="metric-card"><div class="metric-val" style="color:#FFFFFF;">{sim_result["modified_risk_category"]}</div><div class="metric-lbl">Risk Category Shift</div></div>',
+                unsafe_allow_html=True,
             )
+
+        st.markdown("<br>", unsafe_allow_html=True)
 
         # Before / After Comparison Bar Chart
         comp_df = pd.DataFrame(
@@ -714,10 +867,11 @@ elif menu_option == "⚡ 5. What-If Simulator & Revenue at Risk":
             y="Churn Probability (%)",
             text="Churn Probability (%)",
             color="Scenario",
-            color_discrete_sequence=["#94A3B8", "#0EA5E9"],
+            color_discrete_sequence=["#475569", THEME["primary"]],
         )
         fig_comp.update_traces(texttemplate="%{text:.1f}%", textposition="outside")
-        fig_comp.update_layout(height=280, showlegend=False, yaxis_range=[0, 100], margin=dict(l=20, r=20, t=20, b=20))
+        fig_comp.update_layout(showlegend=False, yaxis_range=[0, 100])
+        style_plot(fig_comp, height=300)
         st.plotly_chart(fig_comp, use_container_width=True)
 
         st.warning(f"⚠️ **Notice**: {sim_result['disclaimer']}")
@@ -736,17 +890,17 @@ elif menu_option == "⚡ 5. What-If Simulator & Revenue at Risk":
             )
         with r2:
             st.markdown(
-                f'<div class="metric-card"><div class="metric-val">${kpis["total_monthly_revenue"]:,.0f}</div><div class="metric-lbl">Total Monthly Revenue</div></div>',
+                f'<div class="metric-card"><div class="metric-val" style="color:{THEME["primary"]};">${kpis["total_monthly_revenue"]:,.0f}</div><div class="metric-lbl">Total Monthly Revenue</div></div>',
                 unsafe_allow_html=True,
             )
         with r3:
             st.markdown(
-                f'<div class="metric-card"><div class="metric-val" style="color:#DC2626;">${kpis["expected_monthly_risk"]:,.0f}</div><div class="metric-lbl">Expected Monthly Risk</div></div>',
+                f'<div class="metric-card"><div class="metric-val" style="color:{THEME["churn"]};">${kpis["expected_monthly_risk"]:,.0f}</div><div class="metric-lbl">Expected Monthly Risk</div></div>',
                 unsafe_allow_html=True,
             )
         with r4:
             st.markdown(
-                f'<div class="metric-card"><div class="metric-val" style="color:#DC2626;">${kpis["expected_annual_risk"]:,.0f}</div><div class="metric-lbl">Annualized Revenue at Risk</div></div>',
+                f'<div class="metric-card"><div class="metric-val" style="color:{THEME["churn"]};">${kpis["expected_annual_risk"]:,.0f}</div><div class="metric-lbl">Annualized Revenue at Risk</div></div>',
                 unsafe_allow_html=True,
             )
 
@@ -762,10 +916,10 @@ elif menu_option == "⚡ 5. What-If Simulator & Revenue at Risk":
                 seg_rar_df,
                 values="Expected_Monthly_Risk",
                 names="Segment_Name",
-                hole=0.45,
-                color_discrete_sequence=px.colors.qualitative.Safe,
+                hole=0.48,
+                color_discrete_sequence=[THEME["churn"], THEME["primary"], THEME["success"], THEME["secondary"]],
             )
-            fig_rar_pie.update_layout(height=360, margin=dict(l=20, r=20, t=20, b=20))
+            style_plot(fig_rar_pie, height=360)
             st.plotly_chart(fig_rar_pie, use_container_width=True)
 
         with col_s2:
@@ -776,10 +930,11 @@ elif menu_option == "⚡ 5. What-If Simulator & Revenue at Risk":
                 y="Expected_Monthly_Risk",
                 text="Expected_Monthly_Risk",
                 color="Segment_Name",
-                color_discrete_sequence=px.colors.qualitative.Safe,
+                color_discrete_sequence=[THEME["churn"], THEME["primary"], THEME["success"], THEME["secondary"]],
             )
             fig_rar_bar.update_traces(texttemplate="$%{text:,.0f}", textposition="outside")
-            fig_rar_bar.update_layout(height=360, showlegend=False, margin=dict(l=20, r=20, t=20, b=20))
+            fig_rar_bar.update_layout(showlegend=False)
+            style_plot(fig_rar_bar, height=360)
             st.plotly_chart(fig_rar_bar, use_container_width=True)
 
         st.subheader("Segment Financial Breakdown")
