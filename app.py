@@ -100,6 +100,14 @@ st.markdown(
 )
 
 
+def render_table(df: pd.DataFrame):
+    """Render dataframe with graceful fallback to st.table if pyarrow encounters any issue."""
+    try:
+        st.dataframe(df, use_container_width=True, hide_index=True)
+    except Exception:
+        st.table(df)
+
+
 @st.cache_resource
 def load_all_artifacts():
     """Load pre-trained models, processors, and datasets into cache."""
@@ -443,7 +451,7 @@ elif menu_option == "👥 2. Customer Segmentation":
     display_summary["Churn_Rate"] = display_summary["Churn_Rate"].map("{:.1%}".format)
     display_summary["Percentage"] = display_summary["Percentage"].map("{:.1f}%".format)
 
-    st.dataframe(
+    render_table(
         display_summary[
             [
                 "Cluster",
@@ -457,9 +465,7 @@ elif menu_option == "👥 2. Customer Segmentation":
                 "Risk_Level",
                 "Strategy",
             ]
-        ],
-        use_container_width=True,
-        hide_index=True,
+        ]
     )
 
 
@@ -784,7 +790,7 @@ elif menu_option == "⚡ 5. What-If Simulator & Revenue at Risk":
         display_rar["Avg_Churn_Probability"] = display_rar["Avg_Churn_Probability"].map("{:.1%}".format)
         display_rar["Risk_Share_Pct"] = display_rar["Risk_Share_Pct"].map("{:.1f}%".format)
 
-        st.dataframe(
+        render_table(
             display_rar[
                 [
                     "Segment_Name",
@@ -796,7 +802,5 @@ elif menu_option == "⚡ 5. What-If Simulator & Revenue at Risk":
                     "Annual_Expected_Risk",
                     "Risk_Share_Pct",
                 ]
-            ],
-            use_container_width=True,
-            hide_index=True,
+            ]
         )
