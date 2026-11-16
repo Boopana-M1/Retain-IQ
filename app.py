@@ -52,10 +52,10 @@ st.markdown(
     [data-testid="stDeployButton"],
     [data-testid="stAppDeployButton"],
     .stDeployButton,
-    .stAppDeployButton {
+    .stAppDeployButton {{
         display: none !important;
         visibility: hidden !important;
-    }
+    }}
 
     /* Main Background & Typography */
     .stApp {{
@@ -93,23 +93,76 @@ st.markdown(
         color: {THEME["text"]};
     }}
 
-    /* Navigation Radio Items */
-    [data-testid="stSidebar"] .stRadio > div {{
+    /* Sidebar Section Headers */
+    .sidebar-header {{
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1.2px;
+        color: #94A3B8;
+        margin-top: 6px;
+        margin-bottom: 8px;
+    }}
+
+    /* Navigation Radio Items - Sleek Modern Pill Style */
+    [data-testid="stSidebar"] .stRadio [data-testid="stWidgetLabel"] {{
+        display: none !important;
+    }}
+    [data-testid="stSidebar"] .stRadio div[role="radiogroup"] {{
+        display: flex;
+        flex-direction: column;
         gap: 6px;
+        width: 100%;
     }}
-    [data-testid="stSidebar"] .stRadio label {{
-        background: {THEME["card"]};
-        border: 1px solid {THEME["border"]};
+    /* Hide native radio button dot/circle */
+    [data-testid="stSidebar"] .stRadio div[role="radiogroup"] label > div:first-child {{
+        display: none !important;
+    }}
+    /* Clean navigation cards */
+    [data-testid="stSidebar"] .stRadio div[role="radiogroup"] label {{
+        background: #1E293B;
+        border: 1px solid #334155;
+        border-left: 3px solid transparent;
         border-radius: 8px;
-        padding: 8px 12px;
-        color: {THEME["text"]};
+        padding: 10px 14px;
+        color: #E2E8F0;
         cursor: pointer;
-        transition: all 0.15s ease-in-out;
+        display: flex;
+        align-items: center;
+        width: 100% !important;
+        margin: 0 !important;
+        box-sizing: border-box;
+        transition: all 0.18s ease-in-out;
     }}
-    [data-testid="stSidebar"] .stRadio label:hover {{
-        background: #273549;
-        border-color: {THEME["primary"]};
+    [data-testid="stSidebar"] .stRadio div[role="radiogroup"] label:hover {{
+        background: #243147;
+        border-color: #475569;
+        border-left-color: #60A5FA;
         color: #FFFFFF;
+        transform: translateX(3px);
+    }}
+    /* Active Selected State */
+    [data-testid="stSidebar"] .stRadio div[role="radiogroup"] label:has(input:checked) {{
+        background: linear-gradient(90deg, rgba(59, 130, 246, 0.22) 0%, #1E293B 100%) !important;
+        border: 1px solid #3B82F6 !important;
+        border-left: 4px solid #3B82F6 !important;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15) !important;
+        color: #FFFFFF !important;
+    }}
+    /* Text inside navigation card */
+    [data-testid="stSidebar"] .stRadio div[role="radiogroup"] label [data-testid="stMarkdownContainer"] {{
+        width: 100%;
+    }}
+    [data-testid="stSidebar"] .stRadio div[role="radiogroup"] label p {{
+        font-size: 0.88rem !important;
+        font-weight: 500 !important;
+        color: inherit !important;
+        margin: 0 !important;
+        line-height: 1.35 !important;
+    }}
+    [data-testid="stSidebar"] .stRadio div[role="radiogroup"] label:has(input:checked) p {{
+        font-weight: 600 !important;
+        color: #FFFFFF !important;
     }}
 
     /* Consistent Dark KPI Cards */
@@ -297,6 +350,7 @@ with st.sidebar:
     st.caption("Customer Churn & Retention Intelligence")
     st.markdown("---")
 
+    st.markdown('<div class="sidebar-header">NAVIGATION</div>', unsafe_allow_html=True)
     menu_option = st.radio(
         "Navigation",
         [
@@ -306,6 +360,7 @@ with st.sidebar:
             "💡 4. Retention Engine",
             "⚡ 5. What-If Simulator & Revenue at Risk",
         ],
+        label_visibility="collapsed",
     )
 
     st.markdown("---")
