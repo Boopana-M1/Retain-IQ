@@ -13,8 +13,6 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import silhouette_score
 import joblib
 
-from src.data_processor import TelcoDataProcessor
-
 
 class CustomerSegmenter:
     """
@@ -28,32 +26,14 @@ class CustomerSegmenter:
         "num_services",
     ]
 
-    CLUSTER_PERSONAS = {
-        0: {
-            "name": "New / Budget Month-to-Month",
-            "tagline": "Recent signups with low tenure and basic service usage.",
-            "churn_risk": "High",
-            "strategy": "Early onboarding check-ins, app engagement, and flexible contract incentives.",
-        },
-        1: {
-            "name": "High-Value Loyalists",
-            "tagline": "Long-term subscribers with high monthly spend and premium multi-service packages.",
-            "churn_risk": "Low",
-            "strategy": "VIP loyalty rewards, priority tech support, and early access to hardware upgrades.",
-        },
-        2: {
-            "name": "Heavy Streaming High-Spenders",
-            "tagline": "Mid-tenure customers with high monthly fiber/streaming bills sensitive to price hikes.",
-            "churn_risk": "Moderate-High",
-            "strategy": "Value-pack streaming bundles, proactive bill review, and annual contract discount.",
-        },
-        3: {
-            "name": "Long-Term Budget Minimalists",
-            "tagline": "Tenured customers with basic phone or DSL lines and consistent low monthly spend.",
-            "churn_risk": "Low",
-            "strategy": "Retain via hassle-free auto-pay perks and gentle upselling to basic security add-ons.",
-        },
-    }
+    SERVICE_COLS = [
+        "OnlineSecurity",
+        "OnlineBackup",
+        "DeviceProtection",
+        "TechSupport",
+        "StreamingTV",
+        "StreamingMovies",
+    ]
 
     def __init__(self, n_clusters: int = 4, random_state: int = 42):
         self.n_clusters = n_clusters
@@ -64,13 +44,48 @@ class CustomerSegmenter:
         self.elbow_scores: Dict[str, List[float]] = {}
         self.personas: Dict[int, Dict[str, str]] = {}
 
+    def _prepare_data(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Ensure all required segmentation features ('tenure', 'MonthlyCharges',
+        'TotalCharges', 'num_services') exist and have valid numeric types.
+        Safely derives 'num_services' and cleans 'TotalCharges' if called on raw data.
+        """
+        data = df.copy()
+
+        # Clean TotalCharges if string / object with blanks
+        if "TotalCharges" in data.columns:
+            if data["TotalCharges"].dtype == object:
+                data["TotalCharges"] = pd.to_numeric(
+                    data["TotalCharges"].astype(str).str.strip(), errors="coerce"
+                )
+            data["TotalCharges"] = data["TotalCharges"].fillna(0.0)
+        elif "MonthlyCharges" in data.columns and "tenure" in data.columns:
+            data["TotalCharges"] = data["MonthlyCharges"] * data["tenure"]
+
+        # Derive num_services if missing
+        if "num_services" not in data.columns:
+            active_count = pd.Series(0, index=data.index)
+            for col in self.SERVICE_COLS:
+                if col in data.columns:
+                    active_count += (data[col] == "Yes").astype(int)
+            data["num_services"] = active_count
+
+        # Ensure numeric type for all segmentation features
+        for col in self.SEGMENTATION_FEATURES:
+            if col in data.columns:
+                data[col] = pd.to_numeric(data[col], errors="coerce").fillna(0.0)
+            else:
+                data[col] = 0.0
+
+        return data
+
     def _assign_dynamic_personas(self, data: pd.DataFrame) -> None:
         """Assign mathematically accurate persona definitions based on cluster centroids."""
         medians = data.groupby("Cluster")[["tenure", "MonthlyCharges"]].mean()
         self.personas = {}
         for c in range(self.n_clusters):
-            avg_tenure = medians.loc[c, "tenure"]
-            avg_monthly = medians.loc[c, "MonthlyCharges"]
+            avg_tenure = medians.loc[c, "tenure"] if c in medians.index else 0
+            avg_monthly = medians.loc[c, "MonthlyCharges"] if c in medians.index else 0
 
             if avg_tenure >= 36 and avg_monthly >= 60:
                 self.personas[c] = {
@@ -103,7 +118,8 @@ class CustomerSegmenter:
 
     def find_optimal_k(self, df: pd.DataFrame, max_k: int = 7) -> Dict[str, Any]:
         """Compute inertia and silhouette scores for k from 2 to max_k."""
-        X = df[self.SEGMENTATION_FEATURES].copy()
+        data = self._prepare_data(df)
+        X = data[self.SEGMENTATION_FEATURES].copy()
         X_scaled = self.scaler.fit_transform(X)
 
         inertias = []
@@ -128,7 +144,7 @@ class CustomerSegmenter:
         Fit K-Means on segmentation features and assign cluster labels.
         Returns the dataframe with 'Cluster' and 'Segment_Name' columns added.
         """
-        data = df.copy()
+        data = self._prepare_data(df)
         X = data[self.SEGMENTATION_FEATURES]
         X_scaled = self.scaler.fit_transform(X)
 
@@ -151,15 +167,27 @@ class CustomerSegmenter:
 
     def _compute_cluster_summary(self, data: pd.DataFrame) -> pd.DataFrame:
         """Calculate statistical profile for each customer cluster."""
+        churn_series = data.get("Churn", None)
+        if churn_series is not None:
+            if churn_series.dtype == object:
+                numeric_churn = (churn_series == "Yes").astype(int)
+            else:
+                numeric_churn = pd.to_numeric(churn_series, errors="coerce").fillna(0).astype(int)
+        else:
+            numeric_churn = pd.Series(0, index=data.index)
+
+        data_with_churn = data.copy()
+        data_with_churn["_numeric_churn"] = numeric_churn
+
         summary = (
-            data.groupby("Cluster")
+            data_with_churn.groupby("Cluster")
             .agg(
                 Count=("Cluster", "count"),
                 Avg_Tenure=("tenure", "mean"),
                 Avg_MonthlyCharges=("MonthlyCharges", "mean"),
                 Avg_TotalCharges=("TotalCharges", "mean"),
                 Avg_Services=("num_services", "mean"),
-                Churn_Rate=("Churn", lambda s: (s == 1).mean() if "Churn" in data.columns else 0.0),
+                Churn_Rate=("_numeric_churn", "mean"),
             )
             .reset_index()
         )
@@ -181,13 +209,31 @@ class CustomerSegmenter:
         if self.kmeans is None:
             raise ValueError("KMeans model not fitted. Call fit() or load() first.")
 
-        # Extract features as DataFrame with feature names to avoid sklearn warning
-        feature_dict = {col: [float(customer_features.get(col, 0.0))] for col in self.SEGMENTATION_FEATURES}
-        X_input = pd.DataFrame(feature_dict)
+        # Extract features safely
+        tenure = float(customer_features.get("tenure", 0.0) or 0.0)
+        monthly = float(customer_features.get("MonthlyCharges", 0.0) or 0.0)
+
+        raw_tc = customer_features.get("TotalCharges", 0.0)
+        if isinstance(raw_tc, str):
+            try:
+                total_charges = float(raw_tc.strip()) if raw_tc.strip() else monthly * tenure
+            except ValueError:
+                total_charges = monthly * tenure
+        else:
+            total_charges = float(raw_tc or 0.0)
+
+        if "num_services" in customer_features and customer_features["num_services"] is not None:
+            num_services = float(customer_features["num_services"])
+        else:
+            num_services = sum(1 for col in self.SERVICE_COLS if customer_features.get(col) == "Yes")
+
+        X_input = pd.DataFrame(
+            [[tenure, monthly, total_charges, num_services]],
+            columns=self.SEGMENTATION_FEATURES,
+        )
         scaled_vals = self.scaler.transform(X_input)
         cluster_id = int(self.kmeans.predict(scaled_vals)[0])
 
-        # Persona lookup from fitted personas or default
         persona = self.personas.get(
             cluster_id,
             {

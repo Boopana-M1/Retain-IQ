@@ -111,6 +111,8 @@ def load_all_artifacts():
     simulator = WhatIfSimulator(processor, predictor)
     revenue_analyzer = RevenueAtRiskAnalyzer(processor, predictor, segmenter)
     raw_df = processor.load_raw_data("data/telco_customer_churn.csv")
+    clean_df = processor.clean_data(raw_df)
+    clean_df = processor.add_engineered_features(clean_df)
     return (
         processor,
         predictor,
@@ -120,6 +122,7 @@ def load_all_artifacts():
         simulator,
         revenue_analyzer,
         raw_df,
+        clean_df,
     )
 
 
@@ -134,6 +137,7 @@ try:
         simulator,
         revenue_analyzer,
         raw_df,
+        clean_df,
     ) = load_all_artifacts()
 except Exception as e:
     st.error(f"Error loading model artifacts: {e}. Please run training scripts first.")
@@ -403,7 +407,7 @@ elif menu_option == "👥 2. Customer Segmentation":
     col_chart1, col_chart2 = st.columns([3, 2])
     with col_chart1:
         st.subheader("Customer Personas Scatter Plot (Tenure vs Monthly Charges)")
-        clean_df_segmented = segmenter.fit(raw_df)
+        clean_df_segmented = segmenter.fit(clean_df)
         fig_scatter = px.scatter(
             clean_df_segmented,
             x="tenure",
